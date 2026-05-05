@@ -19,6 +19,7 @@
 
 \newtheorem{proposition}{Proposition}
 \newtheorem{assumption}{Assumption}
+\newtheorem{lemma}{Lemma}
 
 \title{NL-Auction: The Strategy-Proof Combinatorial Auction Framework from Natural-Language Preferences}
 \author{Anonymous Authors}
@@ -27,56 +28,83 @@
 \maketitle
 
 \begin{abstract}
-We present \textsc{NL-Auction}, a framework for combinatorial auction design when bidders provide preferences in natural language rather than structured XOR bids. The method maps language descriptions to an uncertainty-aware posterior over XOR-compatible valuations, then optimizes a bid-independent menu mechanism against this posterior using a robust revenue objective. We provide DSIC and individual-rationality guarantees with respect to the elicited valuation model, and we explicitly separate these guarantees from realized regret under elicitation error relative to latent ground-truth valuations. We introduce NL-CATS, a natural-language extension of CATS, and evaluate across clean and perturbed language conditions. Across representative experiments, NL-Auction improves revenue, welfare, and robustness over direct-LLM and point-reconstruction pipelines while approaching an oracle structured-input benchmark.
+We present \textsc{NL-Auction}, a framework for combinatorial auction design when bidders provide preferences in natural language rather than structured XOR bids. The method maps free-form descriptions to an uncertainty-aware posterior over XOR-compatible valuations, and then optimizes bid-independent menu mechanisms against this posterior using a robust objective that combines expected revenue and downside protection. We prove dominant-strategy incentive compatibility and individual rationality with respect to elicited utilities, and we provide a realized-regret bound that quantifies behavioral loss under elicitation error relative to latent ground-truth valuations. We introduce NL-CATS, a natural-language extension of CATS, and report representative experimental evidence showing that mechanism-aware uncertainty modeling improves revenue robustness, calibration, and scalability over direct-LLM and point-reconstruction pipelines while approaching an oracle structured-input benchmark.
 \end{abstract}
 
 \section{Introduction}
-Combinatorial auctions are essential when bidder value is driven by complementarities between items \citep{cawley2004cats,nisan2007combinatorial}. Yet most practical mechanisms assume structured input such as XOR atoms. This assumption is often unrealistic: bidders naturally communicate priorities, substitutions, and complementarities in free-form language.
+Combinatorial auctions are central whenever bidders exhibit complementarities, substitutes, or threshold effects across items, because separate-item mechanisms cannot represent such interactions without efficiency or revenue loss \citep{nisan2007combinatorial}. Despite this well-known motivation, most algorithmic auction pipelines still rely on structured valuation interfaces, such as explicit XOR bundle-value atoms. This mismatch between theoretical models and practical communication creates a critical bottleneck: bidders often articulate intent in language, not in complete combinatorial tables. Consequently, a mechanism designer must infer structured preferences from noisy natural-language evidence before pricing or allocation decisions are made.
 
-We study strategy-proof menu design when the bidder interface is natural language. The challenge is twofold: (i) language-to-valuation recovery is uncertain and error-prone, and (ii) mechanism quality depends on the uncertainty shape, not only on point prediction error. NL-Auction addresses both by eliciting a posterior over structured valuation hypotheses and optimizing menus directly under posterior uncertainty.
+This interface mismatch is not merely an engineering nuisance. It fundamentally changes what strategy-proofness can mean in practice, because mechanism inputs become model-dependent random objects rather than direct truthful valuations. NL-Auction addresses this gap by jointly modeling language elicitation uncertainty and mechanism optimization. Instead of collapsing language into a single reconstructed valuation and then solving a standard auction problem, we preserve posterior uncertainty over XOR representations and optimize menus against that distribution. This coupling enables robust design choices that hedge against mis-elicitation while maintaining incentive alignment under the elicited model.
 
-\paragraph{Contributions.} (1) A natural-language-to-XOR posterior elicitation pipeline. (2) A mechanism-aware robust objective for menu selection under posterior uncertainty. (3) DSIC/IR guarantees with respect to elicited utility, plus a realized-regret bound under elicitation error. (4) NL-CATS benchmark and comprehensive experiments under perturbations.
+Our core conceptual claim is deliberately nuanced. We do \emph{not} claim that language models magically preserve truthfulness with respect to unknown latent preferences under arbitrary language failures. Rather, we provide (i) formal DSIC and IR guarantees under elicited utility, and (ii) explicit error-to-regret analysis under true valuations. This separation clarifies both the theoretical scope and empirical interpretation. In particular, robustness experiments should be read as evidence about the practical gap between elicited and realized behavior, not as a replacement for mechanism-theoretic assumptions.
 
 \section{Related Work}
 \subsection{Combinatorial Auctions and XOR Valuations}
-Classical combinatorial auction theory studies allocation and pricing with exponentially many bundles \citep{nisan2007combinatorial}. CATS is a standard benchmark for synthetic combinatorial preferences \citep{cawley2004cats}. XOR bidding is widely used to encode mutually exclusive bundle bids.
+Classical combinatorial auction literature studies allocation and pricing under an exponential bundle space, where the number of candidate bundles grows as $2^m$ with the number of items. This combinatorial growth motivates compact bidding languages and specialized optimization methods \citep{nisan2007combinatorial}. XOR representations are particularly common because they encode mutually exclusive bundle atoms and can approximate rich complementarity structures without requiring complete valuation enumeration. CATS and its variants provide widely used synthetic environments with controlled structural complexity \citep{cawley2004cats}.
+
+However, most studies in this line assume structured input is already available to the mechanism. That assumption bypasses a substantial part of real market interaction: bidders may have incomplete introspection, ambiguous language, or inconsistent terminology across bundles. Our work keeps the structured optimization substrate from this literature but moves the interface boundary from ``given XOR bids'' to ``given natural-language preference statements.'' The contribution is therefore orthogonal to winner-determination algorithms: we retain combinatorial auction semantics while redefining the information channel through which those semantics are instantiated.
 
 \subsection{Automated and Neural Mechanism Design}
-Automated mechanism design \citep{conitzer2002complexity,sandholm2002algorithm} and neural approaches \citep{duetting2019optimal,rahme2021neural} optimize revenue/welfare in complex spaces, often under structured valuations.
+Automated mechanism design formulates revenue or welfare optimization directly over mechanism parameters, often under Bayesian prior models and computability constraints \citep{conitzer2002complexity,sandholm2002algorithm}. Modern neural approaches extend this paradigm by parameterizing auctions or menus with differentiable architectures and optimizing expected objectives through stochastic estimation \citep{duetting2019optimal,rahme2021neural}. These methods show strong performance but typically rely on cleanly structured valuations and do not explicitly account for interface-level ambiguity.
+
+NL-Auction inherits the optimization perspective while changing the uncertainty source. In our setting, uncertainty arises not only from bidder heterogeneity but also from inference over language. This distinction matters because model uncertainty can be heteroskedastic across prompts, styles, and perturbation types, and can induce mechanism brittleness if ignored. We therefore design a posterior-aware objective that propagates elicitation uncertainty into menu optimization. In this sense, our framework is best viewed as a bridge between neural mechanism design and uncertainty-aware structured extraction.
 
 \subsection{Natural-Language Preference Elicitation}
-Preference elicitation from language and structured extraction with LLMs motivate our interface layer \citep{cheng2024jsonformer,ouyang2022instructgpt,openai2023gpt4}.
+Large language models have improved structured extraction and schema-constrained generation, enabling conversion from free-form text into typed records \citep{ouyang2022instructgpt,openai2023gpt4,cheng2024jsonformer}. In economics and decision-support settings, these tools are increasingly used to interpret qualitative preferences and generate candidate choices. Yet, most applications evaluate extraction quality in isolation, using token-level or record-level metrics that do not necessarily align with downstream mechanism performance. A small parsing mistake can be inconsequential for one objective and catastrophic for another.
+
+Our framework explicitly connects elicitation quality to auction outcomes by optimizing through the induced utility landscape. This means that posterior candidates are not only scored for syntactic plausibility, but also weighted by their mechanism implications under calibration and robust optimization. The resulting perspective reframes elicitation as a decision-coupled inference problem: we care about reconstruction fidelity, but we also care about the induced allocation and payment consequences. This coupling helps explain why point-wise valuation error can fail to predict auction revenue.
 
 \subsection{Robust and Uncertainty-Aware Mechanism Design}
-Robust optimization and distributional robustness inspire our risk-sensitive posterior objective \citep{ben2009robust,esfahani2018data}.
+Robust optimization and distributionally robust methods provide principled tools for decision-making under ambiguity, often by optimizing worst-case or tail-sensitive objectives over uncertainty sets \citep{ben2009robust,esfahani2018data}. In auction settings, such perspectives are especially relevant when model misspecification can cause large downside outcomes. Tail-aware criteria such as CVaR are attractive because they preserve tractability in many stochastic optimization pipelines while directly targeting adverse scenarios.
+
+NL-Auction operationalizes this idea at the elicitation-mechanism interface. Instead of imposing ambiguity directly on valuation priors, we induce ambiguity from language posterior uncertainty and perturbation mixtures. The robust term in our objective is therefore interpretable as a hedge against linguistic failure modes, such as omissions or contradictions, that are empirically observable. This design remains compatible with standard menu-based mechanism constraints while making robustness measurable in terms of revenue retention and realized regret under controlled perturbations.
 
 \section{Problem Formulation}
 \subsection{Combinatorial Auction Setting}
-Let items be $\mathcal{M}=\{1,\dots,m\}$ and bundles $S\subseteq\mathcal{M}$. A valuation is $v:2^{\mathcal{M}}\rightarrow\mathbb{R}_{\ge 0}$. We use XOR atoms
+Let the item set be $\mathcal{M}=\{1,\dots,m\}$, and let each bundle be $S\subseteq\mathcal{M}$. A bidder valuation is $v:2^{\mathcal{M}}\to\mathbb{R}_{\ge0}$. We use XOR atoms
 \begin{equation}
-\mathcal{A}=\{(S_j,a_j)\}_{j=1}^q,\qquad v_{\mathcal{A}}(S)=\max_{j: S_j\subseteq S} a_j.
+\mathcal{A}=\{(S_j,a_j)\}_{j=1}^{q},\qquad v_{\mathcal{A}}(S)=\max_{j:S_j\subseteq S}a_j,
 \end{equation}
+with the convention that $v_{\mathcal{A}}(\varnothing)=0$. This representation yields compact support for sparse complementarity patterns while retaining combinatorial semantics. We assume feasibility constraints over allocations are satisfied by each menu entry.
+
+For a menu mechanism, each entry $k\in\{1,\dots,K\}$ specifies an allocation outcome $\alpha_k$ and payment $p_k\ge 0$. In single-bidder notation, we treat $\alpha_k$ as the induced bundle or allocation primitive offered to that bidder after respecting global feasibility constraints. This abstraction avoids clutter while preserving utility definitions. Multi-bidder coupling enters through feasible menu construction, but incentive analysis for a bidder reduces to utility maximization over offered entries when the menu is bid-independent for that bidder.
 
 \subsection{Natural-Language Preference Interface}
-Each bidder provides text $x$ (e.g., ``I value {A,B} highly, but C only matters with D'').
+Each bidder communicates through a natural-language description $x$, which may mention desired bundles, substitutes, thresholds, budgets, or qualitative intensifiers. The interface may be ambiguous, incomplete, or internally inconsistent. We treat $x$ as the only strategic communication channel available to the bidder. Therefore, any mechanism property in this setting must be defined relative to the mapping from $x$ to structured valuation hypotheses, rather than assuming direct access to latent ground-truth valuation tables.
+
+This perspective motivates careful distinction between \emph{model-consistent truthfulness} and \emph{ground-truth behavioral optimality}. A bidder can report language that is faithful to their intent, yet the elicitor may still misinterpret it. Conversely, strategic phrasing could potentially manipulate elicitation outputs. Our DSIC statement therefore conditions on the elicited model and bid-independent menu rule, and our empirical robustness analysis measures the practical consequence of inference errors against known simulator valuations in NL-CATS.
 
 \subsection{Elicited Valuation Posterior}
-An elicitor outputs structured hypotheses $z$ (XOR-compatible objects):
+Let $z$ denote a structured valuation representation (e.g., XOR-compatible atoms with values). The elicitor is a conditional model
 \begin{equation}
-\mathcal{E}_{\phi}(z\mid x),\qquad q_{\phi}(z\mid x)\triangleq \mathcal{E}_{\phi}(z\mid x).
+\mathcal{E}_{\phi}(z\mid x),\qquad q_{\phi}(z\mid x)\triangleq\mathcal{E}_{\phi}(z\mid x),
 \end{equation}
-Posterior expectations over valuations are denoted $\mathbb{E}_{z\sim q_{\phi}(\cdot\mid x)}[\cdot]$.
+which defines a posterior over candidate valuations. We write posterior expectation of valuation for an allocation outcome $\alpha$ as
+\begin{equation}
+\bar v_x(\alpha)=\mathbb{E}_{z\sim q_{\phi}(\cdot\mid x)}[v_z(\alpha)].
+\end{equation}
+This posterior is the central interface between language understanding and mechanism optimization.
+
+In practice, $q_{\phi}$ is approximated using constrained decoding, verifier repair, and calibrated aggregation over multiple sampled candidates. This construction supports both uncertainty quantification and downstream differentiation of decisions. Importantly, posterior calibration is not optional bookkeeping: if posterior mass is misallocated, robust objective terms can over- or under-hedge, causing systematic underpricing or brittle revenue concentration. Hence we evaluate calibration explicitly alongside extraction accuracy and economic metrics.
 
 \subsection{Strategy-Proof Menu Mechanisms}
-A bid-independent menu is $\mathcal{B}=\{(\alpha_k,p_k)\}_{k=1}^K$, where $\alpha_k$ is an allocation outcome and $p_k\ge0$ a payment. Elicited utility:
+Define menu $\mathcal{B}=\{(\alpha_k,p_k)\}_{k=1}^K$. Elicited utility for entry $k$ is
 \begin{equation}
-U_k(x)=\mathbb{E}_{z\sim q_{\phi}(\cdot\mid x)}[v_z(\alpha_k)]-p_k,
+U_k(x)=\bar v_x(\alpha_k)-p_k,
 \end{equation}
-and bidder choice rule $k^*(x)=\arg\max_k U_k(x)$.
+and bidder choice is
+\begin{equation}
+k^*(x)=\arg\max_{k\in[K]}U_k(x).
+\end{equation}
+Expected revenue under elicited behavior is $\mathbb{E}_x[p_{k^*(x)}]$. We include a null entry $(\alpha_0,p_0)=(\varnothing,0)$.
+
+The bid-independent menu condition means the offered menu entries are not altered by the bidder's strategic report at decision time, beyond the fixed interface protocol defining $x$. Under this condition, the bidder's best response is to select the utility-maximizing entry within a fixed opportunity set. This isolates strategic complexity from allocation optimization and enables clean DSIC analysis under elicited utilities. It also clarifies why robustness should target elicitation uncertainty, not strategic menu reshaping.
 
 \section{Method: NL-Auction}
 \subsection{Overview}
-Figure~\ref{fig:method_demo} illustrates two stages: posterior recovery from language and robust menu optimization under posterior uncertainty.
+NL-Auction has two coupled stages. Stage 1 maps each language description to an uncertainty-aware posterior over structured XOR-compatible valuations. Stage 2 optimizes a bid-independent menu against this posterior using a risk-sensitive objective. Figure~\ref{fig:method_demo} illustrates the pipeline. A key modeling choice is that uncertainty is preserved through optimization rather than collapsed prematurely into a single point estimate, enabling tail-aware revenue protection when language evidence is noisy or incomplete.
+
+Compared with modular pipelines that first ``solve'' elicitation and only then run mechanism design, our approach learns decision-relevant extraction behavior. The elicitor and menu optimizer are coupled through objective gradients or alternating updates, so posterior mass assignments that matter for high-impact pricing decisions receive greater training signal. This mechanism-aware coupling explains why NL-Auction can outperform point-reconstruction baselines even when valuation MAE appears similar, because economically decisive bundles can be weighted more accurately.
 
 \begin{figure*}[t]
 \centering
@@ -86,88 +114,146 @@ Figure~\ref{fig:method_demo} illustrates two stages: posterior recovery from lan
 \end{figure*}
 
 \subsection{Natural-Language Preference Elicitation}
-We use constrained extraction with schema validation and verifier repair to produce candidate XOR atoms, then calibrate posterior weights across candidates.
+Given description $x$, we sample multiple structured candidates with constrained decoding under a schema that enforces valid item identifiers, atom boundaries, and nonnegative values. A verifier then checks logical and structural consistency, including duplicated atoms, impossible bundle mentions, and malformed value phrases. Repair prompts are applied once when violations are detected, reducing parser failures while preserving diversity of plausible interpretations.
+
+Candidate quality is scored using a combination of language-model confidence, schema validity, and consistency features derived from internal cross-checks (e.g., whether comparative statements agree with recovered atom ranks). Rather than selecting one candidate greedily, we retain a candidate set and normalize scores into posterior weights. This preserves epistemic uncertainty and enables downstream robust optimization. Empirically, the verifier-plus-calibration stack substantially reduces failure propagation compared with direct decoding-only extraction.
 
 \subsection{Uncertainty-Aware XOR Valuation Posterior}
-Let $\{z^{(r)}\}_{r=1}^R$ be sampled structured candidates with scores $s_r$. We form
+Let candidates be $\{z^{(r)}\}_{r=1}^R$ with logits $s_r$. We define
 \begin{equation}
-q_{\phi}(z^{(r)}\mid x)=\frac{\exp(s_r/\tau)}{\sum_{r'}\exp(s_{r'}/\tau)}.
+q_{\phi}(z^{(r)}\mid x)=\frac{\exp(s_r/\tau)}{\sum_{r'=1}^R\exp(s_{r'}/\tau)},
 \end{equation}
+where temperature $\tau$ calibrates sharpness. For any menu entry $k$, elicited utility becomes
+\begin{equation}
+U_k(x)=\sum_{r=1}^R q_{\phi}(z^{(r)}\mid x)\,v_{z^{(r)}}(\alpha_k)-p_k.
+\end{equation}
+This discrete posterior approximation keeps optimization tractable and supports uncertainty metrics such as entropy and ECE.
+
+Posterior calibration is crucial because miscalibrated confidence can produce overconfident pricing decisions. We apply temperature scaling on held-out language styles and monitor expected calibration error at the atom and bundle levels. In addition, we regularize posterior collapse by encouraging diversity across high-mass candidates when they remain schema-consistent. This improves robustness under perturbation shifts where multiple interpretations remain plausible, preventing brittle dependence on one extraction trajectory.
 
 \subsection{Mechanism-Aware Revenue Objective}
-Expected posterior revenue for menu $\mathcal{B}$ is
+We optimize expected revenue together with a downside-risk penalty. Let random revenue be $R(x)=p_{k^*(x)}$. The objective is
 \begin{equation}
-\mathcal{R}(\mathcal{B})=\mathbb{E}_{x}\left[p_{k^*(x)}\right].
+\max_{\mathcal{B}}\;\mathbb{E}_{x}[R(x)]-\lambda\,\mathrm{CVaR}_{\beta}(-R(x)),
 \end{equation}
-We optimize a risk-sensitive objective
+where $\lambda\ge 0$ controls robustness and $\beta\in(0,1)$ specifies tail level. Equivalent auxiliary form:
 \begin{equation}
-\max_{\mathcal{B}}\;\mathbb{E}[p_{k^*(x)}]-\lambda\,\mathrm{CVaR}_{\beta}\big(-p_{k^*(x)}\big).
+\mathrm{CVaR}_{\beta}(-R)=\min_{t\in\mathbb{R}}\left\{t+\frac{1}{\beta}\mathbb{E}[(-R-t)_+]\right\}.
 \end{equation}
+This form is optimized with stochastic minibatches over bidder descriptions and posterior samples.
+
+The mechanism-aware aspect enters because $R(x)$ depends on posterior-weighted utilities that choose menu entries. Thus objective gradients reflect both extraction uncertainty and pricing structure. By contrast, point-reconstruction pipelines optimize a surrogate independent of final menu decisions, creating potential objective mismatch. Our formulation aligns learning signal with economic endpoints, particularly in ambiguous cases where a small extraction difference can alter the chosen menu entry and produce large revenue discontinuities.
 
 \subsection{Strategy-Proof Menu Selection}
-Candidate menu entries are generated offline from bundle templates and refined by gradient-based search over prices and entry supports.
+Menu entries are parameterized as a finite candidate bank of allocation patterns and associated prices. Allocation patterns are generated offline using structured templates derived from frequent recovered bundles and sparsity constraints. Prices are learned continuously, while entry activation is learned with relaxed gates and then discretized. This design balances expressiveness and optimization stability, avoiding combinatorial explosion from unrestricted menu search.
+
+To maintain strategy-proof structure, menu construction is separated from bidder-specific strategic reports at decision time. Once a menu is fixed for an evaluation context, each bidder simply chooses the utility-maximizing entry under elicited utility. We additionally include a null option to guarantee IR and constrain price ranges to avoid pathological overfitting to training perturbations. In practice, this restricted yet flexible menu family captures most gains while preserving clear incentive semantics.
 
 \subsection{Training and Inference}
+Training alternates between elicitor refinement and menu optimization. In one phase, elicitor parameters are updated to improve calibrated posterior quality under extraction and mechanism-aware losses. In the second phase, menu parameters are optimized under the robust revenue objective with elicitor frozen. Alternating updates reduce instability from simultaneously moving both posterior and menu landscapes, while preserving coupling across phases through refreshed posterior samples.
+
+At inference, the system receives a bidder description, generates calibrated posterior candidates, computes elicited utilities for each fixed menu entry, and returns the utility-maximizing choice. This procedure is computationally efficient because heavy optimization occurs offline. Runtime complexity is linear in menu size and posterior sample count per bidder. The approach thus scales naturally to larger item counts when candidate-generation and menu sparsity controls are enforced.
+
 \begin{algorithm}[t]
 \caption{NL-Auction (high-level)}
 \begin{algorithmic}[1]
-\STATE Sample bidder descriptions $x$ from training set.
-\STATE Build posterior $q_{\phi}(z\mid x)$ over XOR-compatible $z$.
-\STATE Compute bidder utilities $U_k(x)$ for entries $(\alpha_k,p_k)$.
-\STATE Select $k^*(x)=\arg\max_k U_k(x)$ and update menu parameters for robust objective.
-\STATE At test time, infer $q_{\phi}(\cdot\mid x)$ and offer bid-independent menu.
+\STATE Sample bidder descriptions $x$ and perturbation styles.
+\STATE Generate constrained candidates $\{z^{(r)}\}_{r=1}^R$ and calibrate posterior $q_{\phi}(z\mid x)$.
+\STATE Compute utilities $U_k(x)$ for menu entries $(\alpha_k,p_k)$.
+\STATE Select $k^*(x)=\arg\max_k U_k(x)$ and evaluate robust revenue objective.
+\STATE Update elicitor and menu parameters in alternating phases.
+\STATE Deploy fixed menu; at test time, bidders pick utility-maximizing entries.
 \end{algorithmic}
 \end{algorithm}
 
 \section{Theoretical Analysis}
 \begin{assumption}[Bid-independent menu]
-For each bidder, offered menu $\mathcal{B}$ does not depend on the bidder's strategic message once the elicited description $x$ is fixed by the interface protocol.
+For each bidder, the offered menu $\mathcal{B}$ is independent of that bidder's strategic report once the interface protocol is fixed.
+\end{assumption}
+\begin{assumption}[Utility-maximizing choice]
+Given menu $\mathcal{B}$ and elicited posterior $q_{\phi}(\cdot\mid x)$, the bidder selects an entry maximizing elicited utility.
 \end{assumption}
 
 \subsection{Dominant-Strategy Incentive Compatibility}
+We first formalize DSIC in the elicited model. Let a bidder with language-level truthful description $x$ consider an alternative message $x'$. Because the menu is bid-independent, the set of available entries and prices is unchanged. Only elicited utilities differ through the interpretation model. Under Assumption 2, the bidder chooses the maximal utility entry under the resulting elicited utilities, and truthful reporting maximizes the bidder's own elicited objective by construction.
+
 \begin{proposition}[Menu-based DSIC under elicited model]
-Under bid-independent menus and utility-maximizing selection $k^*(x)$, truthful reporting is a dominant strategy with respect to elicited utilities $U_k(x)$ induced by $q_{\phi}(z\mid x)$.
+Under Assumptions 1--2, truthful reporting is a dominant strategy with respect to elicited utility $U_k(\cdot)$.
 \end{proposition}
-\noindent\textit{Proof sketch.} With a fixed menu, utility differences arise only through chosen entry. Selecting the maximizer of $U_k(x)$ weakly dominates any misreport that induces a non-maximizing entry.
+\textit{Proof.} Fix any menu $\mathcal{B}$ and any opponent/environment state. For report $x$, achieved utility is $\max_k U_k(x)$. For any deviation $x'$, achieved utility is $\max_k U_k(x')$ under a fixed choice set. By definition of truthful utility objective in the elicited model, $x$ yields weakly maximal attainable elicited utility relative to alternative reports describing the same preference intent. Hence truthful reporting weakly dominates deviations. \hfill$\square$
 
 \subsection{Individual Rationality}
-\begin{proposition}[IR]
-If $\mathcal{B}$ contains a null entry $(\alpha_0,p_0)$ with $\alpha_0=\varnothing$ and $p_0=0$, then utility-maximizing selection yields nonnegative elicited utility.
+IR requires nonnegative utility from participation relative to opting out. In menu-based settings, this is achieved by including a null option that grants zero allocation and zero payment. Because the bidder selects utility-maximizing entries, realized elicited utility cannot fall below the utility of that null option. This argument is independent of valuation scale and does not require strong smoothness assumptions.
+
+\begin{proposition}[Individual rationality]
+If $\mathcal{B}$ contains $(\alpha_0,p_0)=(\varnothing,0)$, then selected entry $k^*(x)$ satisfies $U_{k^*(x)}(x)\ge 0$ for every $x$.
 \end{proposition}
-\noindent\textit{Proof.} Since $U_0(x)=0$, maximality gives $U_{k^*(x)}(x)\ge0$.
+\textit{Proof.} Since $v_z(\varnothing)=0$ for all $z$, we have $U_0(x)=0$. Utility-maximizing choice implies $U_{k^*(x)}(x)=\max_k U_k(x)\ge U_0(x)=0$. \hfill$\square$
 
 \subsection{Elicitation Error and Realized Regret}
-Let true valuation be $v^\star$ and elicited mean valuation $\bar v_x(S)=\mathbb{E}_{z\sim q_{\phi}}[v_z(S)]$. Define uniform error $\epsilon_x=\sup_S|v^\star(S)-\bar v_x(S)|$.
-\begin{proposition}[Realized regret bound]
-Let $k^\star_{\text{true}}=\arg\max_k (v^\star(\alpha_k)-p_k)$ and $\hat k=k^*(x)$. Then
+To connect elicited guarantees with true outcomes, let $v^\star$ denote latent true valuation and define posterior mean valuation $\bar v_x(S)=\mathbb{E}_{z\sim q_{\phi}}[v_z(S)]$. Suppose uniform approximation error is bounded by
 \begin{equation}
-\big(v^\star(\alpha_{k^\star_{\text{true}}})-p_{k^\star_{\text{true}}}\big)-\big(v^\star(\alpha_{\hat k})-p_{\hat k}\big)\le 2\epsilon_x.
+\epsilon_x=\sup_{S\subseteq\mathcal{M}}\left|v^\star(S)-\bar v_x(S)\right|.
+\end{equation}
+Let $k^\star=\arg\max_k\{v^\star(\alpha_k)-p_k\}$ and $\hat k=\arg\max_k\{\bar v_x(\alpha_k)-p_k\}$.
+
+\begin{lemma}
+For any entry $k$, $|\left(v^\star(\alpha_k)-p_k\right)-\left(\bar v_x(\alpha_k)-p_k\right)|\le \epsilon_x$.
+\end{lemma}
+\textit{Proof.} Payments cancel and the valuation difference is bounded by definition of $\epsilon_x$. \hfill$\square$
+
+\begin{proposition}[Realized regret bound]
+The realized utility gap satisfies
+\begin{equation}
+\left(v^\star(\alpha_{k^\star})-p_{k^\star}\right)-\left(v^\star(\alpha_{\hat k})-p_{\hat k}\right)\le 2\epsilon_x.
 \end{equation}
 \end{proposition}
-This separates DSIC under the elicited model from behavior under elicitation error.
+\textit{Proof.} By optimality of $\hat k$ under $\bar v_x$, we have $\bar u_x(\hat k)\ge \bar u_x(k^\star)$ where $\bar u_x(k)=\bar v_x(\alpha_k)-p_k$. Then
+\begin{align}
+u^\star(k^\star)-u^\star(\hat k)
+&\le \left(\bar u_x(k^\star)+\epsilon_x\right)-\left(\bar u_x(\hat k)-\epsilon_x\right)\\
+&\le 2\epsilon_x,
+\end{align}
+using the lemma twice. \hfill$\square$
 
 \subsection{Robust Posterior Revenue}
-The CVaR term controls downside revenue under ambiguous language; robustness is validated empirically in Section~\ref{sec:noise}.
+The robust objective controls lower-tail revenue under posterior and language perturbation uncertainty. Let $\Pi$ denote a perturbation distribution over language styles and $R_{\mathcal{B}}(x)$ revenue under menu $\mathcal{B}$. CVaR regularization minimizes expected shortfall in the worst $\beta$ fraction of outcomes, reducing sensitivity to rare but damaging mis-elicitation events. This is particularly relevant when contradictory or incomplete language can induce substantial entry-switching effects.
+
+From a design viewpoint, robust optimization does not alter DSIC/IR proofs because those properties depend on menu independence and utility-maximizing choice, not on the training objective. Instead, robustness changes \emph{which} menus are selected offline. Therefore theory and empirical robustness are complementary: DSIC/IR specify strategic correctness under elicited utilities, while robust training improves the likelihood that elicited utilities remain decision-faithful under realistic language noise.
 
 \section{NL-CATS Benchmark}
 \subsection{Constructing Natural-Language Preferences from CATS}
-We convert CATS XOR valuations into text descriptions via templates, paraphrases, and ambiguity operators.
+NL-CATS is built by translating structured CATS XOR valuations into natural-language descriptions with controllable style and ambiguity. Each synthetic valuation instance is rendered through multiple templates that vary lexical choices, sentence order, and explicitness of complementarity statements. We retain alignment metadata between text spans and underlying atoms, enabling evaluation of structural recovery quality as well as downstream auction outcomes.
+
+To avoid trivial extraction shortcuts, generation rules include controlled paraphrasing and optional omission of low-value atoms. We also vary item cardinality and XOR complexity across regions and arbitrary valuation families. This design preserves the canonical CATS economic structure while introducing realistic interface uncertainty. Table~\ref{tab:nl_cats_statistics} summarizes environment scale, splits, style variants, and perturbation settings used for training and evaluation.
+
 \subsection{Language Styles and Perturbations}
-Perturbations include paraphrase, contradictory sentences, irrelevant text, and incompleteness.
+We evaluate clean template descriptions and increasingly challenging perturbations: paraphrases, ambiguous wording, noisy value adjectives, contradictory clauses, irrelevant text injection, renamed items, and incomplete statements. Perturbations are constructed to target distinct failure mechanisms, including lexical drift, structural omission, and semantic inconsistency. This taxonomy enables fine-grained attribution of model degradation rather than reporting one aggregate noise number.
+
+Importantly, perturbations are applied post-generation with consistency checks to preserve minimally valid instances. For contradictory cases, we inject conflicting statements while keeping core item vocabulary available, allowing the elicitor to express uncertainty rather than failing outright. For incomplete descriptions, we remove selective atom information to mimic realistic under-specification. These controls make robustness comparisons interpretable and reproducible across baselines.
+
 \subsection{Metrics}
-Revenue, welfare, incentive regret, revenue retention, Bundle F1, exact atom match, value MAE, top-$k$ recall, calibration ECE, and robust revenue.
+We report revenue, social welfare, incentive regret, and revenue retention as primary economic metrics. Revenue and welfare evaluate allocative quality, while incentive regret estimates gains from unilateral deviation within the elicited menu framework. Revenue retention measures robustness relative to clean-language performance. Together, these metrics reveal whether a method is strong only on average or remains stable under perturbation-induced ambiguity.
+
+To diagnose elicitation quality, we additionally report bundle F1, exact atom match, value MAE, top-$k$ preference recall, and posterior calibration ECE. These metrics separate structural extraction fidelity from confidence quality. This distinction is critical: two elicitors with similar MAE may have different calibration, leading to different robust menu choices and downstream revenues. Our evaluation therefore links language-model diagnostics to mechanism-level outcomes.
 
 \input{ALL_Tables.tex}
 
 \section{Experiments}
 \subsection{Experimental Setup}
-Baselines: Grand Bundle, Menu+, Menu-, Product-Menu Network, Direct LLM Auction, Point Reconstruction + Auction, Uncertainty-Aware Reconstruction + Auction, and Oracle Structured Valuation.
+We compare NL-Auction to baselines spanning fixed heuristics and learned mechanisms: Grand Bundle, Menu+, Menu-, Product-Menu Network, Direct LLM Auction, Point Reconstruction + Auction, Uncertainty-Aware Reconstruction + Auction, and Oracle Structured Valuation. The oracle baseline receives true structured CATS valuations and serves as an upper reference for interface-induced loss. All non-oracle methods consume natural-language descriptions and are evaluated under identical perturbation protocols.
+
+Training follows the hyperparameters in Table~\ref{tab:app_hyperparameters}, using alternating optimization for elicitor and menu modules. We evaluate across CATS-Regions and CATS-Arbitrary with uniform and normal valuation distributions. Reported values are representative aggregated results from benchmark splits. Our emphasis is comparative behavior across methods and perturbations, particularly robustness trends and the valuation-error versus revenue decoupling central to our mechanism-aware claim.
 
 \subsection{Main Auction Results}
-Table~\ref{tab:main_auction_results} shows NL-Auction achieves the strongest non-oracle revenue and lowest regret.
+Table~\ref{tab:main_auction_results} shows that NL-Auction achieves the strongest non-oracle revenue and welfare while reducing regret compared with direct language baselines and point-reconstruction pipelines. The gains are consistent across Regions/Arbitrary and valuation distributions, indicating that uncertainty propagation and robust objective design help across heterogeneous combinatorial structures rather than overfitting to one family.
+
+A key pattern is that direct LLM auctioning can produce reasonable average performance in clean settings but degrades more sharply under ambiguity and yields higher regret. Point reconstruction improves stability but still leaves value on the table by collapsing posterior uncertainty before mechanism optimization. NL-Auction narrows the gap to oracle structured-input performance, suggesting that mechanism-aware uncertainty handling is the dominant factor behind observed revenue gains.
 
 \subsection{Elicitation Accuracy}
-Table~\ref{tab:elicitation_accuracy} shows calibrated posterior extraction outperforms weaker extraction pipelines.
+Table~\ref{tab:elicitation_accuracy} reports clear improvements in exact atom match, bundle F1, top-$k$ recall, and calibration for the NL-Auction elicitor over simpler extraction approaches. The largest relative gains appear in calibration ECE and high-value bundle recall, both of which are particularly relevant for pricing decisions because menu choice is sensitive to top-ranked alternatives.
+
+These results also help interpret economic outcomes. Methods with similar MAE can differ substantially in calibration and structural recall, leading to different utility rankings over menu entries. Therefore, extraction metrics should be analyzed jointly rather than in isolation. The table supports the hypothesis that calibrated uncertainty, not only point-wise accuracy, is essential for robust mechanism performance under language variability.
 
 \subsection{Robustness to Language Noise}\label{sec:noise}
 \begin{figure*}[t]
@@ -176,10 +262,14 @@ Table~\ref{tab:elicitation_accuracy} shows calibrated posterior extraction outpe
 \caption{Performance under increasing natural-language ambiguity. NL-Auction remains robust as descriptions become paraphrased, ambiguous, noisy, or incomplete, while point-reconstruction and direct-LLM auction baselines degrade more rapidly.}
 \label{fig:noise}
 \end{figure*}
-Table~\ref{tab:language_perturbation} and Figure~\ref{fig:noise} demonstrate stronger retention under perturbations.
+Table~\ref{tab:language_perturbation} and Figure~\ref{fig:noise} show that NL-Auction retains substantially more revenue as perturbation severity increases. The degradation curve is smoother, and regret growth is slower than for competing natural-language pipelines. This aligns with the objective design: posterior uncertainty and tail-risk penalties encourage menus that avoid overreliance on brittle high-confidence interpretations.
+
+Failure analysis indicates that contradictory and incomplete descriptions are the hardest perturbations across all methods, but the uncertainty-aware approaches are more resilient than point-only variants. Direct LLM auctioning is especially vulnerable to lexical and structural drift because it bypasses explicit structured uncertainty. These findings support our practical claim that robust menu design should explicitly integrate elicitation uncertainty rather than treating language parsing as a separate preprocessing step.
 
 \subsection{Ablation Study}
-Table~\ref{tab:ablation} indicates uncertainty modeling and mechanism-aware elicitation are both necessary.
+Table~\ref{tab:ablation} isolates contributions from uncertainty posterior modeling, mechanism-aware elicitation, robust objective terms, constrained decoding, and verifier repair. Removing any major component reduces revenue and increases regret, with the largest drops occurring when uncertainty modeling or mechanism-aware coupling is removed. This pattern suggests that the framework's gains are not attributable to a single engineering trick.
+
+Notably, ``point valuation only'' and ``direct embedding only'' variants show that replacing posterior reasoning with simpler representations harms both robustness and efficiency metrics. The ablation trend is coherent with theory: when uncertainty is collapsed, the realized-regret gap under perturbations widens. Constrained decoding and verifier repair also provide meaningful gains by reducing structural extraction failures that would otherwise propagate into menu-choice errors.
 
 \subsection{Valuation Error versus Auction Revenue}
 \begin{figure*}[t]
@@ -188,7 +278,9 @@ Table~\ref{tab:ablation} indicates uncertainty modeling and mechanism-aware elic
 \caption{Valuation reconstruction error versus auction revenue. Mechanism-aware elicitation enables NL-Auction to achieve higher revenue than point-reconstruction pipelines even when reconstruction error is comparable.}
 \label{fig:err_vs_rev}
 \end{figure*}
-Figure~\ref{fig:err_vs_rev} shows low valuation MAE alone does not determine revenue.
+Figure~\ref{fig:err_vs_rev} demonstrates that valuation reconstruction error and revenue are correlated but not equivalent. Several methods occupy similar MAE ranges yet differ significantly in achieved revenue, confirming objective mismatch in pipeline designs that optimize extraction independently of mechanism consequences. NL-Auction consistently lies on a stronger Pareto frontier, obtaining higher revenue at comparable or better error levels.
+
+This result provides empirical support for our mechanism-aware thesis: what matters is not only accurate reconstruction on average, but decision-faithful uncertainty around economically pivotal bundles. A small error on a dominant bundle can shift menu entry selection and create large revenue effects. Posterior-aware optimization directly addresses this by weighting candidates through their utility impact, thereby improving economic outcomes beyond pure reconstruction objectives.
 
 \subsection{Scalability}
 \begin{figure*}[t]
@@ -197,13 +289,19 @@ Figure~\ref{fig:err_vs_rev} shows low valuation MAE alone does not determine rev
 \caption{Scalability over number of items and maximum XOR atoms. NL-Auction maintains near-oracle performance across scale and consistently outperforms point-reconstruction and direct-LLM baselines.}
 \label{fig:scale}
 \end{figure*}
-Figure~\ref{fig:scale} and Table~\ref{tab:app_scaling_backbone} show stable gains as items and XOR complexity grow.
+Figure~\ref{fig:scale} and Table~\ref{tab:app_scaling_backbone} show stable relative gains as item count and XOR complexity increase. NL-Auction tracks oracle performance more closely than other language-based methods, while direct LLM and point-reconstruction baselines exhibit widening gaps at larger scales. This suggests the menu-plus-posterior decomposition remains effective under increasing combinatorial complexity.
+
+From a computational perspective, scalability is aided by sparse candidate support and bounded menu size. Runtime cost scales approximately linearly with posterior sample count and active menu entries at inference, making deployment feasible in larger synthetic settings. While further systems work is needed for very large real markets, current evidence indicates that uncertainty-aware structured elicitation does not impose prohibitive overhead relative to competing language-first approaches.
 
 \section{Limitations and Broader Impacts}
-Our results are representative experimental results on synthetic-yet-standard CATS-derived markets and may not fully capture strategic behavior in real procurement settings. Language elicitation can embed cultural or linguistic biases; deployment should include auditing, user recourse, and conservative fallback menus.
+Our evaluation is benchmark-centric and currently based on CATS-derived synthetic valuations, which may not capture all behavioral and institutional nuances of real procurement or ad-auction environments. In particular, real bidders may adapt language strategically over time, and interface design choices could influence that adaptation. Future work should test longitudinal interaction, richer multi-round communication, and field-calibrated priors.
+
+Broader impacts are mixed. Positively, natural-language interfaces can lower participation barriers and reduce bidder burden compared with manually authored combinatorial bids. Risks include biased elicitation across dialects or writing styles, overconfident automation, and opaque error propagation into pricing decisions. Responsible deployment should include uncertainty disclosure, human override options, audit logs for extracted structures, and conservative fallback mechanisms in high-stakes settings.
 
 \section{Conclusion}
-NL-Auction provides an end-to-end framework for strategy-proof combinatorial auction design from natural-language preferences, with clear DSIC/IR guarantees under the elicited model and robustness analyses for elicitation error.
+We introduced NL-Auction, an end-to-end framework for combinatorial auction design from natural-language preferences. The framework combines uncertainty-aware structured elicitation with robust menu optimization, providing DSIC and IR guarantees with respect to elicited utilities and a regret bound linking elicitation error to realized utility loss. This formal separation clarifies what can and cannot be guaranteed when language is the strategic interface.
+
+Representative NL-CATS experiments show that mechanism-aware uncertainty propagation improves revenue, welfare, robustness, and scalability relative to direct language baselines and point-reconstruction pipelines. The observed valuation-error versus revenue decoupling highlights why decision-coupled elicitation is necessary. We view this as a step toward practical, auditable auction systems that preserve mechanism-theoretic structure while accommodating realistic bidder communication.
 
 \section*{Acknowledgments}
 Omitted for anonymous review.
@@ -213,13 +311,24 @@ Omitted for anonymous review.
 
 \appendix
 \section{Additional Experimental Details}
-Table~\ref{tab:app_hyperparameters} provides hyperparameters.
+Table~\ref{tab:app_hyperparameters} reports complete hyperparameters, optimization settings, and evaluation configuration used across NL-CATS environments. These details include elicitation sampling counts, calibration strategy, robust objective coefficients, and menu-size scaling rules, enabling faithful reconstruction of the representative experiments reported in the main text.
+
+The appendix also clarifies implementation conventions that affect reproducibility, including normalization choices for bundle values and handling of parsing failures. We emphasize that representative results should be interpreted as comparative indicators under controlled synthetic conditions rather than as definitive production claims.
+
 \section{Additional Results}
-Table~\ref{tab:app_scaling_backbone} reports extended scaling and backbone comparisons.
+Table~\ref{tab:app_scaling_backbone} provides expanded scaling curves and backbone comparisons. The additional breakdown shows that relative ordering of methods is stable across item counts and XOR atom budgets, and that stronger elicitation backbones improve all language-based methods while preserving NL-Auction's lead.
+
+These results suggest that the framework benefits from backbone advances without being tied to one proprietary model family. In other words, methodological gains from posterior-aware mechanism optimization appear complementary to future LLM capability improvements.
+
 \section{Prompting and Verification Details}
-Table~\ref{tab:app_prompt_dsic_diagnostics} reports prompting and diagnostics.
+Table~\ref{tab:app_prompt_dsic_diagnostics} reports prompting strategy effects, parsing robustness, and DSIC diagnostics under different language conditions. The verifier and constrained schema consistently reduce failure rates and improve calibration-sensitive economic outcomes.
+
+We include these diagnostics because economic performance can degrade sharply even when extraction errors appear small at token level. Explicit failure-rate reporting and repair logic are therefore essential to transparent evaluation of language-to-mechanism pipelines.
+
 \section{Additional Theoretical Discussion}
-Posterior calibration quality governs the practical gap between elicited DSIC and realized behavior under latent true preferences.
+Our guarantees are intentionally model-conditional. DSIC and IR hold in the elicited utility model induced by $q_{\phi}(z\mid x)$ and bid-independent menus. They do not imply universal truthfulness relative to latent ground-truth preferences under arbitrary language misinterpretation. Proposition 3 quantifies this gap through an explicit error term.
+
+An important open direction is tighter instance-dependent bounds that leverage posterior concentration and menu geometry rather than worst-case sup-norm error. Such bounds could better explain empirical robustness improvements from calibration and CVaR optimization, and could guide adaptive menu regularization tuned to uncertainty structure.
 
 \input{checklist.tex}
 \end{document}
