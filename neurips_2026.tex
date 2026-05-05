@@ -1,147 +1,225 @@
 \documentclass{article}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{amsthm}
-\usepackage{booktabs}
-\usepackage{algorithm}
-\usepackage{algorithmic}
+\PassOptionsToPackage{numbers,compress}{natbib}
+\usepackage[main]{neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
 \usepackage{url}
-\usepackage{verbatim}
-\usepackage{graphicx}
-\usepackage{cite}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{textcomp}
-\usepackage{pifont}
-\usepackage{algorithmicx}
+\usepackage{amsthm}
+\usepackage{graphicx}
 \usepackage{algorithm}
-\usepackage{booktabs}
-\usepackage{algpseudocode}
-\usepackage[switch]{lineno}
-\usepackage{amsmath}
+\usepackage{algorithmic}
 \usepackage{microtype}
-\usepackage{multirow}
-\newtheorem{example}{Example}
-\newtheorem{theorem}{Theorem}
-% if you need to pass options to natbib, use, e.g.:
-\PassOptionsToPackage{numbers, compress}{natbib}
-% before loading neurips_2026
-% The authors should use one of these tracks.
-% Before accepting by the NeurIPS conference, select one of the options below.
-% 0. "default" for submission
-\usepackage[main]{neurips_2026}
-% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
-% 1. "main" option is used for the Main Track
-%  \usepackage[main]{neurips_2026}
-% 2. "position" option is used for the Position Paper Track
-%  \usepackage[position]{neurips_2026}
-% 3. "eandd" option is used for the Evaluations & Datasets Track
- % \usepackage[eandd]{neurips_2026}
- % if you need to opt-in for a single-blind submission in the E&D track:
- %\usepackage[eandd, nonanonymous]{neurips_2026}
-% 4. "creativeai" option is used for the Creative AI Track
-%  \usepackage[creativeai]{neurips_2026}
-% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
- % \usepackage[sglblindworkshop]{neurips_2026}
-% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
-%  \usepackage[dblblindworkshop]{neurips_2026}
 
-% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
-% 1. Main Track
- % \usepackage[main, final]{neurips_2026}
-% 2. Position Paper Track
-%  \usepackage[position, final]{neurips_2026}
-% 3. Evaluations & Datasets Track
- % \usepackage[eandd, final]{neurips_2026}
-% 4. Creative AI Track
-%  \usepackage[creativeai, final]{neurips_2026}
-% 5. Workshop with single-blind reviewing
-%  \usepackage[sglblindworkshop, final]{neurips_2026}
-% 6. Workshop with double-blind reviewing
-%  \usepackage[dblblindworkshop, final]{neurips_2026}
-% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
-% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
-% \workshoptitle{WORKSHOP TITLE}
+\newtheorem{proposition}{Proposition}
+\newtheorem{assumption}{Assumption}
 
-% "preprint" option is used for arXiv or other preprint submissions
- % \usepackage[preprint]{neurips_2026}
-
-% to avoid loading the natbib package, add option nonatbib:
-%    \usepackage[nonatbib]{neurips_2026}
-
-\usepackage[utf8]{inputenc} % allow utf-8 input
-\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage{hyperref}       % hyperlinks
-\usepackage{url}            % simple URL typesetting
-\usepackage{booktabs}       % professional-quality tables
-\usepackage{amsfonts}       % blackboard math symbols
-\usepackage{nicefrac}       % compact symbols for 1/2, etc.
-\usepackage{microtype}      % microtypography
-\usepackage{xcolor}         % colors
-
-% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
-\title{Learning Minimal Sufficient Reasoning Graphs via Structured Information Bottleneck}
-
-
-% The \author macro works with any number of authors. There are two commands
-% used to separate the names and addresses of multiple authors: \And and \AND.
-%
-% Using \And between authors leaves it to LaTeX to determine where to break the
-% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
-% authors names on the first line, and the last on the second line, try using
-% \AND instead of \And before the third author name.
-
-
-\author{%
-  David S.~Hippocampus\thanks{Use footnote for providing further information
-    about author (webpage, alternative address)---\emph{not} for acknowledging
-    funding agencies.} \\
-  Department of Computer Science\\
-  Cranberry-Lemon University\\
-  Pittsburgh, PA 15213 \\
-  \texttt{hippo@cs.cranberry-lemon.edu} \\
-  % examples of more authors
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \AND
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-}
-
+\title{NL-Auction: The Strategy-Proof Combinatorial Auction Framework from Natural-Language Preferences}
+\author{Anonymous Authors}
 
 \begin{document}
-
-
 \maketitle
 
-
 \begin{abstract}
-  Large language models typically perform reasoning through linear chain-of-thought (CoT) generation
+We present \textsc{NL-Auction}, a framework for combinatorial auction design when bidders provide preferences in natural language rather than structured XOR bids. The method maps language descriptions to an uncertainty-aware posterior over XOR-compatible valuations, then optimizes a bid-independent menu mechanism against this posterior using a robust revenue objective. We provide DSIC and individual-rationality guarantees with respect to the elicited valuation model, and we explicitly separate these guarantees from realized regret under elicitation error relative to latent ground-truth valuations. We introduce NL-CATS, a natural-language extension of CATS, and evaluate across clean and perturbed language conditions. Across representative experiments, NL-Auction improves revenue, welfare, and robustness over direct-LLM and point-reconstruction pipelines while approaching an oracle structured-input benchmark.
 \end{abstract}
 
+\section{Introduction}
+Combinatorial auctions are essential when bidder value is driven by complementarities between items \citep{cawley2004cats,nisan2007combinatorial}. Yet most practical mechanisms assume structured input such as XOR atoms. This assumption is often unrealistic: bidders naturally communicate priorities, substitutions, and complementarities in free-form language.
+
+We study strategy-proof menu design when the bidder interface is natural language. The challenge is twofold: (i) language-to-valuation recovery is uncertain and error-prone, and (ii) mechanism quality depends on the uncertainty shape, not only on point prediction error. NL-Auction addresses both by eliciting a posterior over structured valuation hypotheses and optimizing menus directly under posterior uncertainty.
+
+\paragraph{Contributions.} (1) A natural-language-to-XOR posterior elicitation pipeline. (2) A mechanism-aware robust objective for menu selection under posterior uncertainty. (3) DSIC/IR guarantees with respect to elicited utility, plus a realized-regret bound under elicitation error. (4) NL-CATS benchmark and comprehensive experiments under perturbations.
+
+\section{Related Work}
+\subsection{Combinatorial Auctions and XOR Valuations}
+Classical combinatorial auction theory studies allocation and pricing with exponentially many bundles \citep{nisan2007combinatorial}. CATS is a standard benchmark for synthetic combinatorial preferences \citep{cawley2004cats}. XOR bidding is widely used to encode mutually exclusive bundle bids.
+
+\subsection{Automated and Neural Mechanism Design}
+Automated mechanism design \citep{conitzer2002complexity,sandholm2002algorithm} and neural approaches \citep{duetting2019optimal,rahme2021neural} optimize revenue/welfare in complex spaces, often under structured valuations.
+
+\subsection{Natural-Language Preference Elicitation}
+Preference elicitation from language and structured extraction with LLMs motivate our interface layer \citep{cheng2024jsonformer,ouyang2022instructgpt,openai2023gpt4}.
+
+\subsection{Robust and Uncertainty-Aware Mechanism Design}
+Robust optimization and distributional robustness inspire our risk-sensitive posterior objective \citep{ben2009robust,esfahani2018data}.
+
+\section{Problem Formulation}
+\subsection{Combinatorial Auction Setting}
+Let items be $\mathcal{M}=\{1,\dots,m\}$ and bundles $S\subseteq\mathcal{M}$. A valuation is $v:2^{\mathcal{M}}\rightarrow\mathbb{R}_{\ge 0}$. We use XOR atoms
+\begin{equation}
+\mathcal{A}=\{(S_j,a_j)\}_{j=1}^q,\qquad v_{\mathcal{A}}(S)=\max_{j: S_j\subseteq S} a_j.
+\end{equation}
+
+\subsection{Natural-Language Preference Interface}
+Each bidder provides text $x$ (e.g., ``I value {A,B} highly, but C only matters with D'').
+
+\subsection{Elicited Valuation Posterior}
+An elicitor outputs structured hypotheses $z$ (XOR-compatible objects):
+\begin{equation}
+\mathcal{E}_{\phi}(z\mid x),\qquad q_{\phi}(z\mid x)\triangleq \mathcal{E}_{\phi}(z\mid x).
+\end{equation}
+Posterior expectations over valuations are denoted $\mathbb{E}_{z\sim q_{\phi}(\cdot\mid x)}[\cdot]$.
+
+\subsection{Strategy-Proof Menu Mechanisms}
+A bid-independent menu is $\mathcal{B}=\{(\alpha_k,p_k)\}_{k=1}^K$, where $\alpha_k$ is an allocation outcome and $p_k\ge0$ a payment. Elicited utility:
+\begin{equation}
+U_k(x)=\mathbb{E}_{z\sim q_{\phi}(\cdot\mid x)}[v_z(\alpha_k)]-p_k,
+\end{equation}
+and bidder choice rule $k^*(x)=\arg\max_k U_k(x)$.
+
+\section{Method: NL-Auction}
+\subsection{Overview}
+Figure~\ref{fig:method_demo} illustrates two stages: posterior recovery from language and robust menu optimization under posterior uncertainty.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{ALL_Fig/fig1_nl_auction_demo.pdf}
+\caption{Demonstration of NL-Auction. Stage 1 recovers an uncertainty-aware combinatorial valuation posterior from natural-language bidder preferences. Stage 2 uses the recovered posterior to select a strategy-proof menu entry, allocation, and price. Opacity indicates posterior density.}
+\label{fig:method_demo}
+\end{figure*}
+
+\subsection{Natural-Language Preference Elicitation}
+We use constrained extraction with schema validation and verifier repair to produce candidate XOR atoms, then calibrate posterior weights across candidates.
+
+\subsection{Uncertainty-Aware XOR Valuation Posterior}
+Let $\{z^{(r)}\}_{r=1}^R$ be sampled structured candidates with scores $s_r$. We form
+\begin{equation}
+q_{\phi}(z^{(r)}\mid x)=\frac{\exp(s_r/\tau)}{\sum_{r'}\exp(s_{r'}/\tau)}.
+\end{equation}
+
+\subsection{Mechanism-Aware Revenue Objective}
+Expected posterior revenue for menu $\mathcal{B}$ is
+\begin{equation}
+\mathcal{R}(\mathcal{B})=\mathbb{E}_{x}\left[p_{k^*(x)}\right].
+\end{equation}
+We optimize a risk-sensitive objective
+\begin{equation}
+\max_{\mathcal{B}}\;\mathbb{E}[p_{k^*(x)}]-\lambda\,\mathrm{CVaR}_{\beta}\big(-p_{k^*(x)}\big).
+\end{equation}
+
+\subsection{Strategy-Proof Menu Selection}
+Candidate menu entries are generated offline from bundle templates and refined by gradient-based search over prices and entry supports.
+
+\subsection{Training and Inference}
+\begin{algorithm}[t]
+\caption{NL-Auction (high-level)}
+\begin{algorithmic}[1]
+\STATE Sample bidder descriptions $x$ from training set.
+\STATE Build posterior $q_{\phi}(z\mid x)$ over XOR-compatible $z$.
+\STATE Compute bidder utilities $U_k(x)$ for entries $(\alpha_k,p_k)$.
+\STATE Select $k^*(x)=\arg\max_k U_k(x)$ and update menu parameters for robust objective.
+\STATE At test time, infer $q_{\phi}(\cdot\mid x)$ and offer bid-independent menu.
+\end{algorithmic}
+\end{algorithm}
+
+\section{Theoretical Analysis}
+\begin{assumption}[Bid-independent menu]
+For each bidder, offered menu $\mathcal{B}$ does not depend on the bidder's strategic message once the elicited description $x$ is fixed by the interface protocol.
+\end{assumption}
+
+\subsection{Dominant-Strategy Incentive Compatibility}
+\begin{proposition}[Menu-based DSIC under elicited model]
+Under bid-independent menus and utility-maximizing selection $k^*(x)$, truthful reporting is a dominant strategy with respect to elicited utilities $U_k(x)$ induced by $q_{\phi}(z\mid x)$.
+\end{proposition}
+\noindent\textit{Proof sketch.} With a fixed menu, utility differences arise only through chosen entry. Selecting the maximizer of $U_k(x)$ weakly dominates any misreport that induces a non-maximizing entry.
+
+\subsection{Individual Rationality}
+\begin{proposition}[IR]
+If $\mathcal{B}$ contains a null entry $(\alpha_0,p_0)$ with $\alpha_0=\varnothing$ and $p_0=0$, then utility-maximizing selection yields nonnegative elicited utility.
+\end{proposition}
+\noindent\textit{Proof.} Since $U_0(x)=0$, maximality gives $U_{k^*(x)}(x)\ge0$.
+
+\subsection{Elicitation Error and Realized Regret}
+Let true valuation be $v^\star$ and elicited mean valuation $\bar v_x(S)=\mathbb{E}_{z\sim q_{\phi}}[v_z(S)]$. Define uniform error $\epsilon_x=\sup_S|v^\star(S)-\bar v_x(S)|$.
+\begin{proposition}[Realized regret bound]
+Let $k^\star_{\text{true}}=\arg\max_k (v^\star(\alpha_k)-p_k)$ and $\hat k=k^*(x)$. Then
+\begin{equation}
+\big(v^\star(\alpha_{k^\star_{\text{true}}})-p_{k^\star_{\text{true}}}\big)-\big(v^\star(\alpha_{\hat k})-p_{\hat k}\big)\le 2\epsilon_x.
+\end{equation}
+\end{proposition}
+This separates DSIC under the elicited model from behavior under elicitation error.
+
+\subsection{Robust Posterior Revenue}
+The CVaR term controls downside revenue under ambiguous language; robustness is validated empirically in Section~\ref{sec:noise}.
+
+\section{NL-CATS Benchmark}
+\subsection{Constructing Natural-Language Preferences from CATS}
+We convert CATS XOR valuations into text descriptions via templates, paraphrases, and ambiguity operators.
+\subsection{Language Styles and Perturbations}
+Perturbations include paraphrase, contradictory sentences, irrelevant text, and incompleteness.
+\subsection{Metrics}
+Revenue, welfare, incentive regret, revenue retention, Bundle F1, exact atom match, value MAE, top-$k$ recall, calibration ECE, and robust revenue.
+
+\input{ALL_Tables.tex}
+
+\section{Experiments}
+\subsection{Experimental Setup}
+Baselines: Grand Bundle, Menu+, Menu-, Product-Menu Network, Direct LLM Auction, Point Reconstruction + Auction, Uncertainty-Aware Reconstruction + Auction, and Oracle Structured Valuation.
+
+\subsection{Main Auction Results}
+Table~\ref{tab:main_auction_results} shows NL-Auction achieves the strongest non-oracle revenue and lowest regret.
+
+\subsection{Elicitation Accuracy}
+Table~\ref{tab:elicitation_accuracy} shows calibrated posterior extraction outperforms weaker extraction pipelines.
+
+\subsection{Robustness to Language Noise}\label{sec:noise}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{ALL_Fig/fig3_language_noise.pdf}
+\caption{Performance under increasing natural-language ambiguity. NL-Auction remains robust as descriptions become paraphrased, ambiguous, noisy, or incomplete, while point-reconstruction and direct-LLM auction baselines degrade more rapidly.}
+\label{fig:noise}
+\end{figure*}
+Table~\ref{tab:language_perturbation} and Figure~\ref{fig:noise} demonstrate stronger retention under perturbations.
+
+\subsection{Ablation Study}
+Table~\ref{tab:ablation} indicates uncertainty modeling and mechanism-aware elicitation are both necessary.
+
+\subsection{Valuation Error versus Auction Revenue}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{ALL_Fig/fig4_valuation_error_vs_revenue.pdf}
+\caption{Valuation reconstruction error versus auction revenue. Mechanism-aware elicitation enables NL-Auction to achieve higher revenue than point-reconstruction pipelines even when reconstruction error is comparable.}
+\label{fig:err_vs_rev}
+\end{figure*}
+Figure~\ref{fig:err_vs_rev} shows low valuation MAE alone does not determine revenue.
+
+\subsection{Scalability}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{ALL_Fig/fig5_scalability.pdf}
+\caption{Scalability over number of items and maximum XOR atoms. NL-Auction maintains near-oracle performance across scale and consistently outperforms point-reconstruction and direct-LLM baselines.}
+\label{fig:scale}
+\end{figure*}
+Figure~\ref{fig:scale} and Table~\ref{tab:app_scaling_backbone} show stable gains as items and XOR complexity grow.
+
+\section{Limitations and Broader Impacts}
+Our results are representative experimental results on synthetic-yet-standard CATS-derived markets and may not fully capture strategic behavior in real procurement settings. Language elicitation can embed cultural or linguistic biases; deployment should include auditing, user recourse, and conservative fallback menus.
+
+\section{Conclusion}
+NL-Auction provides an end-to-end framework for strategy-proof combinatorial auction design from natural-language preferences, with clear DSIC/IR guarantees under the elicited model and robustness analyses for elicitation error.
+
+\section*{Acknowledgments}
+Omitted for anonymous review.
 
 \bibliographystyle{nips}
 \bibliography{custom}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \appendix
+\section{Additional Experimental Details}
+Table~\ref{tab:app_hyperparameters} provides hyperparameters.
+\section{Additional Results}
+Table~\ref{tab:app_scaling_backbone} reports extended scaling and backbone comparisons.
+\section{Prompting and Verification Details}
+Table~\ref{tab:app_prompt_dsic_diagnostics} reports prompting and diagnostics.
+\section{Additional Theoretical Discussion}
+Posterior calibration quality governs the practical gap between elicited DSIC and realized behavior under latent true preferences.
 
+\input{checklist.tex}
 \end{document}

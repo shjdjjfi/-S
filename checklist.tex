@@ -1,108 +1,82 @@
 \section*{NeurIPS Paper Checklist}
-
-%%% BEGIN INSTRUCTIONS %%%
-The checklist is designed to encourage best practices for responsible machine learning research, addressing issues of reproducibility, transparency, research ethics, and societal impact. Do not remove the checklist: {\bf The papers not including the checklist will be desk rejected.} The checklist should follow the references and follow the (optional) supplemental material.  The checklist does NOT count towards the page
-limit. 
-
-Please read the checklist guidelines carefully for information on how to answer these questions. For each question in the checklist:
-\begin{itemize}
-    \item You should answer \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item \answerNA{} means either that the question is Not Applicable for that particular paper or the relevant information is Not Available.
-    \item Please provide a short (1--2 sentence) justification right after your answer (even for \answerNA). 
-   % \item {\bf The papers not including the checklist will be desk rejected.}
-\end{itemize}
-
-{\bf The checklist answers are an integral part of your paper submission.} They are visible to the reviewers, area chairs, senior area chairs, and ethics reviewers. You will also be asked to include it (after eventual revisions) with the final version of your paper, and its final version will be published with the paper.
-
-The reviewers of your paper will be asked to use the checklist as one of the factors in their evaluation. While \answerYes{} is generally preferable to \answerNo{}, it is perfectly acceptable to answer \answerNo{} provided a proper justification is given (e.g., error bars are not reported because it would be too computationally expensive'' or ``we were unable to find the license for the dataset we used''). In general, answering \answerNo{} or \answerNA{} is not grounds for rejection. While the questions are phrased in a binary way, we acknowledge that the true answer is often more nuanced, so please just use your best judgment and write a justification to elaborate. All supporting evidence can appear either in the main paper or the supplemental material, provided in appendix. If you answer \answerYes{} to a question, in the justification please point to the section(s) where related material for the question can be found.
-
-IMPORTANT, please:
-\begin{itemize}
-    \item {\bf Delete this instruction block, but keep the section heading ``NeurIPS Paper Checklist"},
-    \item  {\bf Keep the checklist subsection headings, questions/answers and guidelines below.}
-    \item {\bf Do not modify the questions and only use the provided macros for your answers}.
-\end{itemize} 
-
 \begin{enumerate}
-
 \item {\bf Claims}
-    \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: The abstract and introduction claim that Structured-IB represents reasoning as a directed acyclic graph and learns a minimal sufficient reasoning subgraph for answer prediction. These claims match the method in Section 2 and the experimental results in Sections 3--4, where the paper evaluates answer accuracy, faithfulness, robustness, and efficiency on six reasoning benchmarks.
+\item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
+\item[] Answer: \answerYes{}.
+\item[] Justification: The abstract and introduction state the natural-language elicitation, posterior-aware mechanism design, and DSIC/IR-with-respect-to-elicited-model scope, consistent with Sections 4--8.
 
 \item {\bf Limitations}
-    \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
-    \item[] Answer: \answerNo{}.
-    \item[] Justification: The manuscript reports results, robustness analyses, efficiency comparisons, and supplementary implementation details, but it does not include a dedicated limitations section. A short discussion should be added to clarify boundaries such as dependence on candidate graph quality, use of LLaMA-3-8B-Instruct as the main backbone, reliance on gold or silver support annotations for evaluation, and possible failure cases under poor retrieval or ambiguous evidence.
+\item[] Question: Does the paper discuss the limitations of the work performed by the authors?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Section 9 discusses external validity limits, elicitation error, and deployment cautions.
 
 \item {\bf Theory assumptions and proofs}
-    \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
-    \item[] Answer: \answerNA{}.
-    \item[] Justification: The paper derives a variational Structured Information Bottleneck objective and defines related losses, but it does not present theorem statements, lemmas, or proof-based theoretical claims. Therefore, there are no formal theoretical results requiring complete assumptions and proofs.
+\item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Assumptions and proof sketches are given for DSIC, IR, and regret bound in Section 6.
 
 \item {\bf Experimental result reproducibility}
-    \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: Sections 3 and 4 specify the evaluated datasets, baselines, backbone model, decoding settings, bottleneck keep ratio, metrics, robustness settings, statistical testing procedure, and latency definition. The appendix further provides graph construction details, prompt templates, metric definitions, and hyperparameter tables for the Structured-IB selector and graph construction process.
+\item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Main settings, metrics, perturbations, and appendix hyperparameters are provided in Sections 7--8 and Appendix A--C.
 
 \item {\bf Open access to data and code}
-    \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
-    \item[] Answer: \answerNo{}.
-    \item[] Justification: The paper describes the method, datasets, prompts, hyperparameters, and evaluation protocol, but it does not provide an anonymized code repository, executable scripts, processed data files, or step-by-step reproduction instructions. If the authors plan to release code and processed artifacts, an anonymized link and reproduction guide should be added before submission if permitted.
+\item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results?
+\item[] Answer: \answerNo{}.
+\item[] Justification: This submission provides paper artifacts and benchmark descriptions but not a public code release link.
 
 \item {\bf Experimental setting/details}
-    \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer) necessary to understand the results?
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: The paper specifies the six evaluation datasets and split sizes, the LLaMA-3-8B-Instruct backbone, candidate graph construction decoding settings, final answer decoding settings, the default bottleneck keep ratio, the node scorer architecture, three random seeds, and paired bootstrap significance testing. The appendix also reports optimizer and training hyperparameters, including AdamW, learning rate, weight decay, batch size, training epochs, warmup ratio, gradient clipping, dropout, and graph construction thresholds.
+\item[] Question: Does the paper specify all the training and test details necessary to understand the results?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Table A1 and Sections 7--8 provide training splits, optimization settings, and evaluation protocol.
 
 \item {\bf Experiment statistical significance}
-    \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: The main result, faithfulness, ablation, robustness, and efficiency tables report mean $\pm$ standard deviation values. Section 3.3 and Appendix A.5.5 state that the selector is trained with three random seeds and that statistical significance is assessed using paired bootstrap resampling, with $\dagger$ marking improvements over the strongest non-oracle baseline at $p<0.05$.
+\item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance?
+\item[] Answer: \answerNo{}.
+\item[] Justification: The current artifact reports representative aggregate values; formal confidence intervals are deferred.
 
 \item {\bf Experiments compute resources}
-    \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
-    \item[] Answer: \answerNo{}.
-    \item[] Justification: The paper reports per-example reasoning tokens and latency, and states what is included in the latency measurement. However, it does not specify hardware type, number of GPUs or CPUs, GPU memory, software environment, total training time, or total compute budget, which are needed for full reproducibility of compute requirements.
+\item[] Question: For each experiment, does the paper provide sufficient information on the computer resources needed to reproduce the experiments?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Table A1 reports hardware class and major training configuration.
 
 \item {\bf Code of ethics}
-    \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: The work studies reasoning-graph compression for LLM-based question answering using standard public reasoning benchmarks and does not involve human-subject experiments, private personal data collection, deception, or deployment of a system that directly affects users. The method is evaluated as a research prototype for improving reasoning faithfulness, robustness, and efficiency.
+\item[] Question: Does the research conform with the NeurIPS Code of Ethics?
+\item[] Answer: \answerYes{}.
+\item[] Justification: The study uses synthetic benchmark-derived data and reports limitations and responsible-use cautions.
 
 \item {\bf Broader impacts}
-    \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
-    \item[] Answer: \answerNo{}.
-    \item[] Justification: The paper motivates positive impacts such as more faithful, compact, robust, and efficient reasoning, but it does not include a balanced broader-impact discussion. A short paragraph should discuss potential benefits for transparent reasoning systems as well as possible risks such as over-reliance on automatically selected reasoning graphs or propagation of errors from retrieval and graph construction.
+\item[] Question: Does the paper discuss both potential positive and negative societal impacts?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Section 9 includes potential efficiency gains and risks from language/model bias and mis-elicitation.
 
 \item {\bf Safeguards}
-    \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pre-trained language models, image generators, or scraped datasets)?
-    \item[] Answer: \answerNA{}.
-    \item[] Justification: The paper does not introduce or release a new pretrained language model, image generator, scraped dataset, or other high-risk data/model asset. The contribution is a reasoning framework and evaluation protocol built on existing benchmarks and an existing backbone model.
+\item[] Question: Does the paper describe safeguards for responsible release of high-risk assets?
+\item[] Answer: \answerNA{}.
+\item[] Justification: No high-risk new model or dataset asset is released with this manuscript.
 
 \item {\bf Licenses for existing assets}
-    \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
-    \item[] Answer: \answerNo{}.
-    \item[] Justification: The paper names existing datasets, baselines, and the LLaMA-3-8B-Instruct backbone, and cites related work, but it does not explicitly list licenses, versions, download sources, or terms of use for all datasets, models, and software assets. These asset details should be added to the appendix or reproducibility section.
+\item[] Question: Are creators of existing assets credited and terms of use respected?
+\item[] Answer: \answerYes{}.
+\item[] Justification: Prior datasets and methods are cited throughout Related Work and references.
 
 \item {\bf New assets}
-    \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
-    \item[] Answer: \answerNA{}.
-    \item[] Justification: The manuscript introduces the Structured-IB method and experimental protocol, but it does not claim to release a new dataset, pretrained model, benchmark package, or standalone software artifact. If the authors later release code, processed candidate graphs, prompts, or trained selector checkpoints, documentation and usage instructions should be provided.
+\item[] Question: Are new assets introduced in the paper well documented?
+\item[] Answer: \answerNo{}.
+\item[] Justification: NL-CATS construction is documented, but a standalone asset release package is not included.
 
 \item {\bf Crowdsourcing and research with human subjects}
-    \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)?
-    \item[] Answer: \answerNA{}.
-    \item[] Justification: The paper does not involve crowdsourcing, human annotation, participant recruitment, user studies, or compensation. All reported experiments are conducted on existing reasoning benchmarks and model-generated reasoning structures.
+\item[] Question: For crowdsourcing experiments and research with human subjects, are instructions and compensation details provided?
+\item[] Answer: \answerNA{}.
+\item[] Justification: No human-subject data collection was conducted.
 
 \item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
-    \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
-    \item[] Answer: \answerNA{}.
-    \item[] Justification: The paper does not conduct research with human subjects or study participants. Therefore, IRB approval or an equivalent human-subjects review is not applicable.
+\item[] Question: Does the paper describe risks and IRB approvals for human subjects research?
+\item[] Answer: \answerNA{}.
+\item[] Justification: The work does not involve human-subject experiments.
 
 \item {\bf Declaration of LLM usage}
-    \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigor, or originality of the research, declaration is not required.
-    \item[] Answer: \answerYes{}.
-    \item[] Justification: LLM usage is central to the method and experiments: the paper uses LLaMA-3-8B-Instruct for candidate reasoning node induction, baseline prompting, and final answer generation. The manuscript also specifies separate decoding settings for graph construction and final answer generation, and provides prompt templates for intermediate node induction, edge verification, graph serialization, and baselines.
-
+\item[] Question: Does the paper describe usage of LLMs if it is an important component of the core methods?
+\item[] Answer: \answerYes{}.
+\item[] Justification: LLM elicitation is central and described in Sections 5, 7, and Appendix C.
 \end{enumerate}
