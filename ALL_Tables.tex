@@ -1,0 +1,299 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Statistics of the proposed NL-CATS benchmark. We construct NL-CATS by converting structured CATS XOR valuations into natural-language bidder preference descriptions with different linguistic styles and ambiguity levels.}
+\label{tab:nl_cats_statistics}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Environment} & \textbf{Valuation Dist.} & \textbf{\#Items} & \textbf{Max XOR Atoms} & \textbf{\#Train} & \textbf{\#Test} & \textbf{Text Styles} & \textbf{Ambiguity Levels} \\
+\midrule
+CATS-Regions & Uniform &
+\makecell{10, 50, 75,\\100, 150} &
+5 & 19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Paraphrased,\\Ambiguous, Noisy, Incomplete} \\
+CATS-Regions & Normal &
+\makecell{10, 50, 75,\\100, 150} &
+5 & 19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Paraphrased,\\Ambiguous, Noisy, Incomplete} \\
+CATS-Arbitrary & Uniform &
+\makecell{10, 50, 75,\\100, 150} &
+5 & 19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Paraphrased,\\Ambiguous, Noisy, Incomplete} \\
+CATS-Arbitrary & Normal &
+\makecell{10, 50, 75,\\100, 150} &
+5 & 19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Paraphrased,\\Ambiguous, Noisy, Incomplete} \\
+\midrule
+CATS-Regions-Large & Normal &
+\makecell{200, 500} &
+5 & 19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Ambiguous,\\Noisy} \\
+CATS-XOR-Complex & Normal &
+100 &
+\makecell{5, 10, 20,\\30, 40, 50} &
+19,000 & 1,000 &
+\makecell{Template, Paraphrased,\\Ambiguous} &
+\makecell{Clean, Paraphrased,\\Ambiguous, Noisy} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Main auction performance on NL-CATS. We report test revenue, social welfare, and incentive regret. ``Oracle Structured Valuation'' uses the original structured CATS XOR valuations without natural-language elicitation and serves as an upper-reference baseline. Higher revenue and welfare are better; lower regret is better.}
+\label{tab:main_auction_results}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Method} &
+\textbf{Regions-U Rev. $\uparrow$} &
+\textbf{Regions-N Rev. $\uparrow$} &
+\textbf{Arbitrary-U Rev. $\uparrow$} &
+\textbf{Arbitrary-N Rev. $\uparrow$} &
+\textbf{Avg. Welfare $\uparrow$} &
+\textbf{Regret $\downarrow$} \\
+\midrule
+Grand Bundle & 316.4 & 319.1 & 329.6 & 354.9 & 512.3 & 0.094 \\
+Menu+ & 399.9 & 460.0 & 396.8 & 478.7 & 604.5 & 0.071 \\
+Menu- & 322.9 & 342.3 & 353.2 & 376.3 & 566.8 & 0.076 \\
+Product-Menu Network & 288.4 & 270.2 & 316.8 & 348.4 & 548.7 & 0.083 \\
+Direct LLM Auction & 390.0 & 405.2 & 418.5 & 432.7 & 584.9 & 0.120 \\
+Point Reconstruction + Auction & 480.6 & 492.4 & 505.1 & 522.8 & 668.7 & 0.067 \\
+Uncertainty-Aware Reconstruction + Auction & 535.2 & 548.6 & 558.4 & 575.1 & 724.5 & 0.041 \\
+\textbf{NL-Auction} & \textbf{560.7} & \textbf{603.8} & \textbf{574.9} & \textbf{618.3} & \textbf{755.4} & \textbf{0.028} \\
+\midrule
+Oracle Structured Valuation & 590.4 & 626.1 & 604.8 & 641.7 & 789.2 & 0.006 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Natural-language preference elicitation accuracy on NL-CATS. We evaluate whether the elicitor recovers the combinatorial valuation structure needed for mechanism design. Bundle F1 measures bundle-level recovery, Value MAE measures value prediction error, Top-$k$ Recall measures recovery of high-value bundles, and ECE measures posterior calibration.}
+\label{tab:elicitation_accuracy}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Elicitation Method} &
+\textbf{Exact Atom Match $\uparrow$} &
+\textbf{Bundle F1 $\uparrow$} &
+\textbf{Value MAE $\downarrow$} &
+\textbf{Top-$k$ Preference Recall $\uparrow$} &
+\textbf{Posterior ECE $\downarrow$} \\
+\midrule
+Zero-shot Extraction & 41.8 & 0.682 & 21.7 & 0.711 & 0.184 \\
+Few-shot Extraction & 49.6 & 0.741 & 18.4 & 0.762 & 0.151 \\
+Chain-of-Thought Extraction & 52.3 & 0.758 & 17.2 & 0.781 & 0.137 \\
+Self-Consistency Extraction & 56.9 & 0.793 & 15.6 & 0.817 & 0.112 \\
+Constrained JSON Extraction & 61.4 & 0.824 & 13.9 & 0.843 & 0.096 \\
+Schema + Verifier Repair & 64.8 & 0.851 & 12.5 & 0.866 & 0.083 \\
+\textbf{NL-Auction Elicitor} & \textbf{69.7} & \textbf{0.889} & \textbf{10.8} & \textbf{0.907} & \textbf{0.052} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Ablation study of NL-Auction components. We report average results over CATS-Regions and CATS-Arbitrary under uniform and normal valuations. Removing uncertainty modeling, mechanism-aware elicitation, or robust posterior optimization consistently degrades auction performance.}
+\label{tab:ablation}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Variant} &
+\textbf{Revenue $\uparrow$} &
+\textbf{Welfare $\uparrow$} &
+\textbf{Regret $\downarrow$} &
+\textbf{Robust Revenue $\uparrow$} &
+\textbf{Value Error $\downarrow$} \\
+\midrule
+Full NL-Auction & \textbf{589.4} & \textbf{755.4} & \textbf{0.028} & \textbf{510.3} & \textbf{10.8} \\
+\midrule
+w/o Uncertainty Posterior & 548.7 & 721.6 & 0.043 & 462.8 & 13.2 \\
+w/o Mechanism-Aware Elicitation & 531.5 & 704.9 & 0.051 & 441.2 & 12.6 \\
+w/o Robust Posterior Objective & 552.9 & 728.4 & 0.039 & 455.6 & 10.9 \\
+w/o Constrained Decoding & 518.4 & 686.3 & 0.064 & 420.1 & 16.7 \\
+w/o Verifier Repair & 536.8 & 710.5 & 0.055 & 438.9 & 14.8 \\
+Point Valuation Only & 500.2 & 668.7 & 0.067 & 394.5 & 15.6 \\
+Direct Natural-Language Embedding Only & 463.1 & 631.2 & 0.089 & 352.4 & 22.1 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Robustness under natural-language perturbations. We report test revenue under different perturbation types. Revenue Drop measures the relative decrease from clean descriptions. NL-Auction is more robust because it propagates elicitation uncertainty into the mechanism-design objective.}
+\label{tab:language_perturbation}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Perturbation Type} &
+\textbf{Direct LLM Auction} &
+\textbf{Point Recon. + Auction} &
+\textbf{Uncertainty Recon. + Auction} &
+\textbf{NL-Auction} &
+\textbf{NL-Auction Drop $\downarrow$} &
+\textbf{Regret $\downarrow$} \\
+\midrule
+Clean Description & 540.0 & 590.0 & 596.2 & \textbf{600.0} & 0.0\% & 0.010 \\
+Paraphrase & 480.0 & 545.0 & 571.4 & \textbf{585.0} & 2.5\% & 0.020 \\
+Missing Bundle & 405.6 & 498.2 & 536.7 & \textbf{558.3} & 7.0\% & 0.031 \\
+Noisy Value Adjective & 390.0 & 480.0 & 522.9 & \textbf{560.0} & 6.7\% & 0.030 \\
+Contradictory Sentence & 352.7 & 442.5 & 503.1 & \textbf{532.8} & 11.2\% & 0.044 \\
+Irrelevant Text Injection & 421.4 & 501.8 & 541.9 & \textbf{563.5} & 6.1\% & 0.035 \\
+Item Renaming & 368.9 & 466.7 & 514.4 & \textbf{545.6} & 9.1\% & 0.039 \\
+Preference Order Only & 300.5 & 420.3 & 487.2 & \textbf{520.7} & 13.2\% & 0.048 \\
+Incomplete Description & 240.0 & 350.0 & 461.5 & \textbf{510.0} & 15.0\% & 0.050 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Full hyperparameter settings and training details. Unless otherwise specified, the same settings are used across all NL-CATS environments.}
+\label{tab:app_hyperparameters}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{lll}
+\toprule
+\textbf{Component} & \textbf{Hyperparameter} & \textbf{Value} \\
+\midrule
+\multirow{6}{*}{LLM Elicitor}
+& Decoding temperature & 0.2 \\
+& Top-$p$ & 0.95 \\
+& Number of elicitation samples & 8 \\
+& Output format & Constrained JSON schema \\
+& Repair strategy & Schema verifier + one-step correction \\
+& Maximum prompt length & 4096 tokens \\
+\midrule
+\multirow{6}{*}{Valuation Posterior}
+& Posterior samples per bidder & 16 \\
+& Candidate bundle cap & 64 \\
+& Value normalization & Per-instance max-value normalization \\
+& Calibration method & Temperature scaling \\
+& Posterior aggregation & Weighted self-consistency \\
+& Uncertainty score & Entropy over recovered bundle atoms \\
+\midrule
+\multirow{7}{*}{Auction Learner}
+& Menu size & 5,000 for $m \leq 100$, 20,000 otherwise \\
+& Bundle support size & 8 \\
+& Optimizer & AdamW \\
+& Learning rate & $5 \times 10^{-4}$ \\
+& Weight decay & $10^{-5}$ \\
+& Training iterations & 200,000 \\
+& Batch size & 256 \\
+\midrule
+\multirow{5}{*}{Robust Objective}
+& Posterior samples per update & 4 \\
+& Robustness penalty & 0.1 \\
+& CVaR level & 0.2 \\
+& Ambiguity sampling & Clean / paraphrased / ambiguous mixture \\
+& Objective & Expected revenue + robust posterior revenue \\
+\midrule
+\multirow{5}{*}{Evaluation}
+& Random seeds & 3 \\
+& Train / test split & 95\% / 5\% \\
+& Main metrics & Revenue, welfare, regret, Bundle F1 \\
+& Regret estimation & Best-response over recovered menu entries \\
+& Hardware & Single NVIDIA A100 GPU \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Additional scaling and backbone results. We report average revenue over NL-CATS settings. The item-scaling block varies the number of items, the XOR-complexity block varies the maximum number of XOR atoms, and the LLM-backbone block compares different elicitation backbones.}
+\label{tab:app_scaling_backbone}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Block} & \textbf{Setting} &
+\textbf{Oracle Structured Valuation} &
+\textbf{NL-Auction} &
+\textbf{Point Recon. + Auction} &
+\textbf{Direct LLM Auction} \\
+\midrule
+\multirow{7}{*}{Item Scaling}
+& $m=10$ & 230.0 & 220.0 & 218.0 & 205.0 \\
+& $m=50$ & 520.0 & 495.0 & 470.0 & 420.0 \\
+& $m=75$ & 560.0 & 535.0 & 498.0 & 445.0 \\
+& $m=100$ & 590.0 & 560.0 & 515.0 & 460.0 \\
+& $m=150$ & 615.0 & 582.0 & 528.0 & 472.0 \\
+& $m=200$ & 628.0 & 595.0 & 535.0 & 478.0 \\
+& $m=500$ & 651.2 & 611.7 & 548.6 & 486.5 \\
+\midrule
+\multirow{6}{*}{XOR Complexity}
+& 5 atoms & 600.0 & 585.0 & 548.0 & 500.0 \\
+& 10 atoms & 605.0 & 590.0 & 555.0 & 505.0 \\
+& 20 atoms & 610.0 & 595.0 & 560.0 & 510.0 \\
+& 30 atoms & 615.0 & 600.0 & 566.0 & 512.0 \\
+& 40 atoms & 620.0 & 602.0 & 568.0 & 515.0 \\
+& 50 atoms & 625.0 & 605.0 & 570.0 & 518.0 \\
+\midrule
+\multirow{5}{*}{LLM Backbone}
+& Closed LLM-A & 626.1 & 603.8 & 492.4 & 405.2 \\
+& Closed LLM-B & 626.1 & 596.4 & 486.7 & 397.5 \\
+& Open LLM-32B & 626.1 & 581.2 & 471.6 & 382.3 \\
+& Open LLM-14B & 626.1 & 558.9 & 452.8 & 361.4 \\
+& Open LLM-7B & 626.1 & 521.5 & 421.7 & 336.9 \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Prompting, verification, and incentive diagnostics. The first block compares prompting strategies. The second block reports DSIC and individual-rationality diagnostics. The third block reports parsing robustness. Regret is measured with respect to the elicited valuation posterior unless otherwise specified.}
+\label{tab:app_prompt_dsic_diagnostics}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Block} & \textbf{Method / Setting} &
+\textbf{Bundle F1 $\uparrow$} &
+\textbf{Value MAE $\downarrow$} &
+\textbf{Revenue $\uparrow$} &
+\textbf{Regret $\downarrow$} &
+\textbf{Failure Rate $\downarrow$} \\
+\midrule
+\multirow{6}{*}{Prompt Strategy}
+& Zero-shot & 0.682 & 21.7 & 462.5 & 0.091 & 8.4\% \\
+& Few-shot & 0.741 & 18.4 & 497.2 & 0.074 & 5.9\% \\
+& Chain-of-thought & 0.758 & 17.2 & 508.6 & 0.069 & 5.1\% \\
+& Self-consistency & 0.793 & 15.6 & 532.8 & 0.055 & 3.8\% \\
+& Constrained JSON & 0.824 & 13.9 & 551.7 & 0.046 & 2.1\% \\
+& Schema + Verifier & \textbf{0.889} & \textbf{10.8} & \textbf{589.4} & \textbf{0.028} & \textbf{0.7\%} \\
+\midrule
+\multirow{5}{*}{DSIC Diagnostics}
+& Clean description & 0.950 & 9.6 & 600.0 & 0.010 & 0.2\% \\
+& Paraphrased description & 0.938 & 10.4 & 585.0 & 0.020 & 0.4\% \\
+& Ambiguous description & 0.912 & 12.9 & 560.0 & 0.030 & 0.7\% \\
+& Noisy description & 0.897 & 15.1 & 535.0 & 0.040 & 1.1\% \\
+& Incomplete description & 0.889 & 17.8 & 510.0 & 0.050 & 1.6\% \\
+\midrule
+\multirow{5}{*}{Parsing Robustness}
+& Standard parser only & 0.811 & 14.8 & 538.2 & 0.052 & 4.6\% \\
+& Parser + schema check & 0.837 & 13.6 & 552.4 & 0.046 & 2.3\% \\
+& Parser + verifier repair & 0.862 & 12.4 & 568.5 & 0.037 & 1.2\% \\
+& Parser + posterior calibration & 0.876 & 11.5 & 579.2 & 0.032 & 0.9\% \\
+& Full pipeline & \textbf{0.889} & \textbf{10.8} & \textbf{589.4} & \textbf{0.028} & \textbf{0.7\%} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
